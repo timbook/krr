@@ -36,16 +36,22 @@ krr <- function(x, y, lambda, sigma = 1) {
   }
 
   f_hat <- K %*% alpha_hat
+  
+  residuals <- f_hat - y
 
   MSE <- mean((f_hat - y)^2)
 
-  return(list("pred" = f_hat,
+  out <- list("pred" = f_hat,
               "alpha_hat" = alpha_hat,
               "lambda" = lambda,
               "ker" = rbf,
               "x" = x,
-              "MSE" = MSE))
+              "residuals" = residuals,
+              "MSE" = MSE)
+  
+  class(out) <- "krr"
+  
+  return(out)
 }
 
 # TODO: Implement choices for kernel.
-# TODO: Make output objects of type 'krr'

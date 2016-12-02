@@ -11,7 +11,7 @@
 #' @return Predicted values and MSE.
 #'
 #' @export
-krr_pred <- function(krr_mod, xnew, ynew = NA) {
+predict.krr <- function(krr_mod, xnew, ynew = NA) {
   xnew <- as.matrix(xnew)
   nnew <- nrow(xnew)
   pnew <- ncol(xnew)
@@ -19,8 +19,6 @@ krr_pred <- function(krr_mod, xnew, ynew = NA) {
   n <- nrow(x)
 
   ker <- krr_mod$ker
-
-  # K_tilde <- makeGram(xnew, x, ker)
 
   K_tilde <- kernlab::kernelMatrix(ker, xnew, x)
 

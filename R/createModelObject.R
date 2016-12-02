@@ -25,7 +25,7 @@ krr <- function(x, y, lambda, sigma = 1) {
 
   if (length(y) != n) stop("Error: x and y of different lengths!")
 
-  rbf <- rbfdot(sigma = sigma)
+  rbf <- kenrlab::rbfdot(sigma = sigma)
   K <- kernlab::kernelMatrix(rbf, x)
 
   if (det(K + lambda*diag(n)) == 0) {

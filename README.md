@@ -16,13 +16,13 @@ Example Use of *krr*
 --------------------
 
 Let us simulation some data:
-
-    set.seed(1234)
-    n <- 100
-    x <- seq(0, 7, length.out = n)
-    y <- 2 + x * sin(x) + rnorm(n, 0, sqrt(2))
-    plot(x, y, pch = 18)
-
+```r
+  set.seed(1234)
+  n <- 100
+  x <- seq(0, 7, length.out = n)
+  y <- 2 + x * sin(x) + rnorm(n, 0, sqrt(2))
+  plot(x, y, pch = 18)
+```
 ![](img/fig1.png)
 
 While kernel ridge regression can handle an *n* × *p* design frame
@@ -36,85 +36,79 @@ Currently, objects of type `formula` are not accepted. The parameter
 standard deviation parameter for the Gaussian kernel. Currently, the
 Gaussian kernel is the only kernel supported. (In my experience, it's
 the best anyway).
-
-    ## * Git is already initialized
-
-    ## * GitHub is already initialized
-
-    mod <- krr(x, y, lambda = 1, sigma = 1)
-
+```r
+mod <- krr(x, y, lambda = 1, sigma = 1)
+```
 Several objects are returned from the `krr` function:
+```r
+names(mod)
 
-    names(mod)
-
-    ## [1] "pred"      "alpha_hat" "lambda"    "ker"       "x"         "residuals"
-    ## [7] "MSE"
-
--   `pred` Are the predictions from the model, often denoted $\\hat{f}$
-    or $\\hat{y}$.
--   `alpha_hat` Is the vector $\\hat{\\alpha}$ used in computing
-    the model.
+## [1] "pred"      "alpha_hat" "lambda"    "ker"       "x"         "residuals"
+## [7] "MSE"
+```
+-   `pred` Are the model predictions.
+-   `alpha_hat` Is the estimated vector alpha used to produce estimates.
 -   `lambda` Is the input *λ* parameter.
 -   `ker` Is the used kernel function.
 -   `x` Is the input design matrix **X**.
 -   `residuals` Are the model residuals.
--   `MSE` is the model mean squared errors $\\sum (y - \\hat{y})^2$
+-   `MSE` is the model mean squared error.
 
 ### Model Prediction
 
 Notice that I provide a class type `krr`:
+```r
+class(mod)
 
-    class(mod)
-
-    ## [1] "krr"
-
+## [1] "krr"
+```
 I also produce some S3 class methods. Specifically, a `predict.krr`
 method:
-
-    n_new <- 20
-    x_new <- seq(2, 5, length.out = n_new)
-    pred_x <- predict(mod, xnew = x_new)
-
+```r
+n_new <- 20
+x_new <- seq(2, 5, length.out = n_new)
+pred_x <- predict(mod, xnew = x_new)
+```
 Which, given only `xnew`, produces only the model predictions:
+```r
+head(pred_x)
 
-    head(pred_x)
-
-    ##          [,1]
-    ## [1,] 3.077697
-    ## [2,] 2.899002
-    ## [3,] 2.667836
-    ## [4,] 2.388769
-    ## [5,] 2.062070
-    ## [6,] 1.689195
-
+##          [,1]
+## [1,] 3.077697
+## [2,] 2.899002
+## [3,] 2.667836
+## [4,] 2.388769
+## [5,] 2.062070
+## [6,] 1.689195
+```
 However, if given a `ynew` parameter, an MSE is also produced:
+```r
+y_new <- 2 + x_new * sin(x_new) + rnorm(n_new, 0, sqrt(2))
+pred_y <- predict(mod, xnew = x_new, ynew = y_new)
+names(pred_y)
 
-    y_new <- 2 + x_new * sin(x_new) + rnorm(n_new, 0, sqrt(2))
-    pred_y <- predict(mod, xnew = x_new, ynew = y_new)
-    names(pred_y)
+## [1] "pred" "MSE"
 
-    ## [1] "pred" "MSE"
+head(pred_y$pred)
 
-    head(pred_y$pred)
+##          [,1]
+## [1,] 3.077697
+## [2,] 2.899002
+## [3,] 2.667836
+## [4,] 2.388769
+## [5,] 2.062070
+## [6,] 1.689195
 
-    ##          [,1]
-    ## [1,] 3.077697
-    ## [2,] 2.899002
-    ## [3,] 2.667836
-    ## [4,] 2.388769
-    ## [5,] 2.062070
-    ## [6,] 1.689195
+pred_y$MSE
 
-    pred_y$MSE
-
-    ## [1] 1.156105
-
+## [1] 1.156105
+```
 ### Plot
 
 I also provide a `plot.krr` function, which only works when *p* = 1:
-
-    plot(mod)
-
+```r
+plot(mod)
+```
 ![](img/fig2.png)
 
 ### Model Selection
@@ -123,41 +117,41 @@ Selecting an appropriate *λ* is not easy. If we allow *λ* to be too
 small, we have a near-perfect fit. If *λ* is too large, our model hardly
 fits at all. I provide a function to aide in model fitting. However, due
 to matrix inversion, this function may take a long time for large *n*.
+```r
+cv <- cv_krr(x, y, lambda_index = seq(0.05, 0.15, 0.01))
+names(cv)
 
-    cv <- cv_krr(x, y, lambda_index = seq(0.05, 0.15, 0.01))
-    names(cv)
-
-    ## [1] "lambda_best" "MSE_best"    "index"       "model_best"
-
+## [1] "lambda_best" "MSE_best"    "index"       "model_best"
+```
 This function uses a crude mockery of cross-validation. The parameter
 `lambda_index` is a vector of *λ*s upon which to run the model.
+```r
+# Which lambda produced the lowest MSE?
+cv$lambda_best
 
-    # Which lambda produced the lowest MSE?
-    cv$lambda_best
+## [1] 0.13
 
-    ## [1] 0.13
+# Which MSE (corresponding to lambda_index) was lowest?
+cv$MSE_best
 
-    # Which MSE (corresponding to lambda_index) was lowest?
-    cv$MSE_best
+## [1] 1.581844
 
-    ## [1] 1.581844
+# A data.frame of all lambda_index values and corresponding MSEs.
+cv$index
 
-    # A data.frame of all lambda_index values and corresponding MSEs.
-    cv$index
-
-    ##    lambda_index      MSE
-    ## 1          0.05 2.779005
-    ## 2          0.06 2.741878
-    ## 3          0.07 2.715519
-    ## 4          0.08 2.696765
-    ## 5          0.09 2.683606
-    ## 6          0.10 2.674692
-    ## 7          0.11 2.669078
-    ## 8          0.12 2.666084
-    ## 9          0.13 2.665203
-    ## 10         0.14 2.666052
-    ## 11         0.15 2.668332
-
+##    lambda_index      MSE
+## 1          0.05 2.779005
+## 2          0.06 2.741878
+## 3          0.07 2.715519
+## 4          0.08 2.696765
+## 5          0.09 2.683606
+## 6          0.10 2.674692
+## 7          0.11 2.669078
+## 8          0.12 2.666084
+## 9          0.13 2.665203
+## 10         0.14 2.666052
+## 11         0.15 2.668332
+```
 The object `cv$model_best` is an object of type `krr` produced using
 `cv$lambda_best`.
 

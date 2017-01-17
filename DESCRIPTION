@@ -14,3 +14,6 @@ LazyData: true
 Imports:
     kernlab
 RoxygenNote: 5.0.1
+Suggests: knitr,
+    rmarkdown
+VignetteBuilder: knitr

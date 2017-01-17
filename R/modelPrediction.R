@@ -11,7 +11,7 @@
 #' @return Predicted values and MSE.
 #'
 #' @export
-predict.krr <- function(krr_mod, xnew, ynew = NA) {
+predict.krr <- function(krr_mod, xnew, ynew = NULL) {
   xnew <- as.matrix(xnew)
   nnew <- nrow(xnew)
   pnew <- ncol(xnew)
@@ -24,14 +24,13 @@ predict.krr <- function(krr_mod, xnew, ynew = NA) {
 
   f_tilde <- K_tilde %*% krr_mod$alpha_hat
 
-  if (is.numeric(ynew)) {
+  if (!is.null(ynew)) {
     MSE <- mean((f_tilde - ynew)^2)
+    return(list(
+      'pred' = f_tilde,
+      'MSE' = MSE
+    ))
   } else {
-    MSE <- NA
+    return(f_tilde)
   }
-
-  return(list(
-    "pred" = f_tilde,
-    "MSE" = MSE
-  ))
 }

@@ -1,0 +1,119 @@
+---
+title: "Kernel Ridge Regression"
+author: "Timothy K. Book"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Description
+This package may be used to create models via the kernel ridge regression
+smoothing method. While it is a neat smoothing method, it is not often used for
+two reasons:
+
+1. Its computation involves inverting an $n \times n$ matrix, and thus suffers
+badly from computing inefficiency.
+1. It tends to fare pretty poorly as a predictive model.
+
+If you are still interesting in using this package, by all means, keep reading!
+
+## Example Use of _krr_
+Let us simulation some data:
+```{r}
+set.seed(1234)
+n <- 100
+x <- seq(0, 7, length.out = n)
+y <- 2 + x * sin(x) + rnorm(n, 0, sqrt(2))
+plot(x, y, pch = 18)
+```
+
+While kernel ridge regression can handle an $n\times p$ design frame 
+$\mathbf{X}$, my example is only $n\times 1$ in order to illustrate the model's
+narrow usage through plotting.
+
+### Producing a Model
+Currently, objects of type `formula` are not accepted.  The parameter `lambda`
+is mandatory, but `sigma` defaults to 1.  `sigma` is the standard deviation
+parameter for the Gaussian kernel.  Currently, the Gaussian kernel is the only
+kernel supported.  (In my experience, it's the best anyway).
+```{r, echo = FALSE}
+devtools::use_github('github.com/TimothyKBook')
+library(krr)
+```
+```{r}
+mod <- krr(x, y, lambda = 1, sigma = 1)
+```
+Several objects are returned from the `krr` function:
+```{r}
+names(mod)
+```
+* `pred` Are the predictions from the model, often denoted $\hat{f}$ or 
+$\hat{y}$.
+* `alpha_hat` Is the vector $\hat{\alpha}$ used in computing the model.
+* `lambda` Is the input $\lambda$ parameter.
+* `ker` Is the used kernel function.
+* `x` Is the input design matrix $\mathbf{X}$.
+* `residuals` Are the model residuals.
+* `MSE` is the model mean squared errors $\sum (y - \hat{y})^2$
+
+### Model Prediction
+Notice that I provide a class type `krr`:
+```{r}
+class(mod)
+```
+I also produce some S3 class methods.  Specifically, a `predict.krr` method:
+```{r}
+n_new <- 20
+x_new <- seq(2, 5, length.out = n_new)
+pred_x <- predict(mod, xnew = x_new)
+```
+Which, given only `xnew`, produces only the model predictions:
+```{r}
+head(pred_x)
+```
+However, if given a `ynew` parameter, an MSE is also produced:
+```{r}
+y_new <- 2 + x_new * sin(x_new) + rnorm(n_new, 0, sqrt(2))
+pred_y <- predict(mod, xnew = x_new, ynew = y_new)
+names(pred_y)
+head(pred_y$pred)
+pred_y$MSE
+```
+
+### Plot
+I also provide a `plot.krr` function, which only works when $p = 1$:
+```{r}
+plot(mod)
+```
+
+### Model Selection
+Selecting an appropriate $\lambda$ is not easy.  If we allow $\lambda$ to be too
+small, we have a near-perfect fit.  If $\lambda$ is too large, our model hardly
+fits at all.  I provide a function to aide in model fitting.  However, due to
+matrix inversion, this function may take a long time for large $n$.
+```{r}
+cv <- cv_krr(x, y, lambda_index = seq(0.05, 0.15, 0.01))
+names(cv)
+```
+This function uses a crude mockery of cross-validation.  The parameter 
+`lambda_index` is a vector of $\lambda$s upon which to run the model.
+```{r}
+# Which lambda produced the lowest MSE?
+cv$lambda_best
+
+# Which MSE (corresponding to lambda_index) was lowest?
+cv$MSE_best
+
+# A data.frame of all lambda_index values and corresponding MSEs.
+cv$index
+```
+The object `cv$model_best` is an object of type `krr` produced using
+`cv$lambda_best`.
+
+### Conclusion
+And that's it!  I have a few `TODO`s in this package, but I don't know if I'll
+ever get to them, since I anticipate no high demand for these methods.  If you
+have any requests or suggestions for refactoring/improving my code (would be
+much appreciated!), please email me at TimothyKBook@gmail.com.

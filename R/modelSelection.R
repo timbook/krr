@@ -16,8 +16,9 @@ cv_krr <- function(x, y, lambda_index) {
     x <- as.matrix(x)
     n <- nrow(x)
     p <- ncol(x)
+  } else {
+    warning("Error: (x, y) must be numeric!")
   }
-  else warning("Error: (x, y) must be numeric!")
 
   # Segment data
   test_n <- sample(1:n, round(0.4*n), replace = FALSE)
@@ -28,7 +29,7 @@ cv_krr <- function(x, y, lambda_index) {
 
   test_MSE <- function(lambda) {
     mod <- krr(x_train, y_train, lambda)
-    MSE <- krr_pred(mod, x_test, y_test)$MSE
+    MSE <- predict(mod, x_test, y_test)$MSE
     return(MSE)
   }
 
@@ -40,7 +41,7 @@ cv_krr <- function(x, y, lambda_index) {
   model_best <- krr(x, y, lambda_best)
   MSE_best <- model_best$MSE
 
-  index_out <- data.frame(lambda, MSE)
+  index_out <- data.frame(lambda_index, MSE)
 
   return(list("lambda_best" = lambda_best,
          "MSE_best" = MSE_best,

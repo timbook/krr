@@ -15,7 +15,7 @@ reading!
 Example Use of *krr*
 --------------------
 
-Let us simulation some data:
+Let us simulate some data:
 ```r
   set.seed(1234)
   n <- 100
